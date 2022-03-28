@@ -1,3 +1,4 @@
+#Importing the required data
 from flask import Flask, render_template, request, session, redirect
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail
@@ -6,10 +7,11 @@ import os
 import math
 from datetime import datetime
 
-
+#connecting the file with sql
 with open('config.json', 'r') as c:
     params = json.load(c)["params"]
 
+#connecting to the local GMail Server
 local_server = True
 app = Flask(__name__)
 app.secret_key = 'super-secret-key'
@@ -29,7 +31,7 @@ else:
 
 db = SQLAlchemy(app)
 
-
+#Creating site info for displaying posts and people
 class Contacts(db.Model):
     sno = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), nullable=False)
@@ -48,7 +50,7 @@ class Posts(db.Model):
     date = db.Column(db.String(12), nullable=True)
     img_file = db.Column(db.String(12), nullable=True)
 
-
+#creating a local URL
 @app.route("/")
 def home():
     posts = Posts.query.filter_by().all()
@@ -76,17 +78,18 @@ def home():
 
     return render_template('index.html', params=params, posts=posts, prev=prev, next=next)
 
-
+#creating the particular post view page URL
 @app.route("/post/<string:post_slug>", methods=['GET'])
 def post_route(post_slug):
     post = Posts.query.filter_by(slug=post_slug).first()
     return render_template('post.html', params=params, post=post)
 
+#creating the about page URL
 @app.route("/about")
 def about():
     return render_template('about.html', params=params)
 
-
+#creating the personal account dashboard page URL
 @app.route("/dashboard", methods=['GET', 'POST'])
 def dashboard():
 
@@ -106,7 +109,7 @@ def dashboard():
 
     return render_template('login.html', params=params)
 
-
+#creating post edit URL
 @app.route("/edit/<string:sno>", methods = ['GET', 'POST'])
 def edit(sno):
     if ('user' in session and session['user'] == params['admin_user']):
@@ -135,7 +138,7 @@ def edit(sno):
         post = Posts.query.filter_by(sno=sno).first()
         return render_template('edit.html', params=params, post=post, sno=sno)
 
-
+#creating uploader URL
 @app.route("/uploader", methods = ['GET', 'POST'])
 def uploader():
     if ('user' in session and session['user'] == params['admin_user']):
@@ -145,12 +148,13 @@ def uploader():
             return "Uploaded successfully"
 
 
-
+#creating logout page URL
 @app.route("/logout")
 def logout():
     session.pop('user')
     return redirect('/dashboard')
 
+#creating delete post URL
 @app.route("/delete/<string:sno>", methods = ['GET', 'POST'])
 def delete(sno):
     if ('user' in session and session['user'] == params['admin_user']):
@@ -160,7 +164,7 @@ def delete(sno):
     return redirect('/dashboard')
 
 
-
+#creating the reciever form entries in sql
 @app.route("/contact", methods = ['GET', 'POST'])
 def contact():
     if(request.method=='POST'):
@@ -178,5 +182,5 @@ def contact():
                           )
     return render_template('contact.html', params=params)
 
-
+#giving command for the server to run
 app.run(debug=True)
